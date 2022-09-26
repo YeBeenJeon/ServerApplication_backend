@@ -1,0 +1,16 @@
+create table history
+(
+    id        varchar(255) not null,
+    time      varchar(255) not null
+        primary key,
+    user_num  varchar(255) null,
+    cpu_usage varchar(255) null
+);
+
+create table register
+(
+    id       varchar(255) not null
+        primary key,
+    state    varchar(5)   null,
+    nickname varchar(255) null
+);
