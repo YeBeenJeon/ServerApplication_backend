@@ -25,24 +25,40 @@ conn = pymysql.connect(
 )
 
 # cur(cursor) -> 커서는 db에 sql문을 실행하거나 실행된 결과를 돌려받는 통로
-# conn.commit() # 확실하게 저장
+#cur = conn.cursor()
+#sql_select = 'select time from history'
+#cur.execute(sql_select)
+#
+#for row in cur:
+#    print(row)
+    
+    
+# sql_insert = 'insert into history (name, time) values (%s, %s)'
+#if len(m) != 0 :
+#    cur.execute(sql_insert, ('t12', m))
+#    conn.commit() # 확실하게 저장
+
+
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'GET':
         req_data = request.args
         # print(req_data.get('time'))
-        clientID = req_data.get('name')
+        clientID = req_data.get('id')
         sendTime = req_data.get('time')
+        cpu_usage = req_data.get('cpu_usage')
+        user_num = req_data.get('user_num')
         previousSendingTime[clientID] = sendTime
 
         cur = conn.cursor()
         sql_register = 'insert ignore into register (id, state) values (%s, %s) on duplicate key update state="ON"'
+    
         cur2 = conn.cursor()
-        sql_insert = 'insert ignore into history (id, time) values (%s, %s)'
+        sql_insert = 'insert ignore into history (id, time, cpu_usage, user_num) values (%s, %s, %s, %s)'
 
         cur.execute(sql_register, (clientID, 'ON')) # 처음 보낼 때 등록, OFF 되었다가 다시 전송되면 ON
-        cur2.execute(sql_insert, (clientID, sendTime))
+        cur2.execute(sql_insert, (clientID, sendTime, cpu_usage, user_num))
         conn.commit() # 확실하게 저장
         print('Done db insert')
 
@@ -51,8 +67,10 @@ def index():
 def run_server():
     app.run(debug=False)
 
+# datetime 객체는 datetime 모듈에서 파생된 것.
+# datetime.fromisoformat() 은 '2022-10-10 12:12:12'와 같은 시간 표현을
+# datetime 객체로 변환하여 준다. => 시간 비교 가능
 def run_while():
-    # sql_off = 'insert ignore into register (id, state) values (%s, %s) on duplicate key update state="OFF";'
     sql_off = 'UPDATE register SET state=%s WHERE id like %s'
     while(1):
         currTime = datetime.now()
@@ -66,11 +84,12 @@ def run_while():
             if(diff.seconds > 30) :
                 cur2.execute(sql_off, ("OFF", key))
                 conn.commit()
-                print(cur2.rowcount, "record(s) affected")
                 print(key, "State is OFF")
 
         time.sleep(4) # Sleep for 3 seconds
         
+
+
 if __name__ == '__main__':
 
     th1 = Thread(target=run_server)
