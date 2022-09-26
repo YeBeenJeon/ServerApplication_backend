@@ -38,17 +38,16 @@ def sending():
 schedule.every(8).seconds.do(sending)
 # schedule.every(3).minutes.do(sending)
 
-end_time = os.popen('date "+%Y-%m-%d %H:%M:%S"').read().split('\n')[0]
-off_datas = {
-	'name' : '10',
-	'time' : end_time,
-	'state' : 'off',
-	'info' : info_str,
-}
-
 try:
 	while True:
 		schedule.run_pending()
 		# time.sleep(1)
 except KeyboardInterrupt:
+	end_time = os.popen('date "+%Y-%m-%d %H:%M:%S"').read().split('\n')[0]
+	off_datas = {
+		'name' : '10',
+		'time' : end_time,
+		'state' : 'off',
+		'info' : info_str,
+	}
 	response = requests.get(url, params=off_datas)
